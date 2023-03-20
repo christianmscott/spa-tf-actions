@@ -32,7 +32,7 @@ jobs:
 
       - name: Terraform Init
         id: init
-        run: terraform init -backend-config='key=${{ GITHUB_HEAD_REF }}.tfstate'
+        run: terraform init -backend-config='key=${{ github.head_ref }}.tfstate'
       
       - name: Terraform Validate
         id: validate
@@ -41,7 +41,7 @@ jobs:
       - name: Terraform Plan
         id: plan
         if: github.event_name == 'pull_request'
-        run: terraform plan -no-color -input=false -var 'environment=${{ GITHUB_HEAD_REF }}'
+        run: terraform plan -no-color -input=false -var 'environment=${{ github.head_ref }}'
         continue-on-error: true
 
       - name: Update Pull Request
