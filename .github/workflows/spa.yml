@@ -10,6 +10,7 @@ jobs:
   tf-ci:
     name: "Terraform PR Validation"
     runs-on: ubuntu-latest
+    environment: azure
     permissions:
       pull-requests: write
     defaults:
