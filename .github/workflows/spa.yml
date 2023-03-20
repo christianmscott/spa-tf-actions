@@ -85,7 +85,7 @@ jobs:
             #### Terraform Initialization ⚙️\`${{ steps.init.outcome }}\`
             #### Terraform Validation 🤖\`${{ steps.validate.outcome }}\`
             #### Terraform Prod Plan 📖\`${{ steps.plan.outcome }}\`
-            #### Preview ENV 🌎\`https://${{ steps.tfout.outputs.stdout }}\`
+            #### Preview URL 🌎 [https://${{ steps.tfout.outputs.stdout }}](https://${{ steps.tfout.outputs.stdout }})
             <details><summary>Show Prod Plan</summary>\n
             \`\`\`\n
             ${process.env.PLAN}
