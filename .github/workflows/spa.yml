@@ -71,7 +71,7 @@ jobs:
 
       - name: Terraform Output
         id: tfout
-        run:  echo "TFOUT='terraform output -raw preview'" >> $GITHUB_OUTPUT
+        run:  terraform output -raw preview | echo "TFOUT=$(cat)" >> $GITHUB_OUTPUT
 
       - name: Update Pull Request
         uses: actions/github-script@v6
@@ -86,7 +86,7 @@ jobs:
             #### Terraform Validation 🤖\`${{ steps.validate.outcome }}\`
             #### Terraform Prod Plan 📖\`${{ steps.plan.outcome }}\`
             #### Preview ENV 🌎\`${{ steps.tfout.outputs.TFOUT }}\`
-            <details><summary>Show Prod Plan</summary>
+            <details><summary>Show Prod Plan</summary>\n
             \`\`\`\n
             ${process.env.PLAN}
             \`\`\`
