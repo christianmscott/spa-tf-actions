@@ -6,23 +6,32 @@ on:
       - main
   pull_request:
 
+permissions:
+  id-token: write
+  contents: read
+
 jobs:
   tf-ci:
     name: "Terraform PR Validation"
     runs-on: ubuntu-latest
     environment: azure
+    env:
+      ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+      ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+      ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
+      TF_LOG: INFO
     permissions:
       pull-requests: write
+      id-token: write
+      contents: read
     defaults:
       run:
         working-directory: ./tf/envdna
-    env:
-      TF_VAR_environment: GITHUB_HEAD_REF
 
     steps:
       - name: Checkout
         uses: actions/checkout@v3
-
+      
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v1
         with:
@@ -34,7 +43,7 @@ jobs:
 
       - name: Terraform Init
         id: init
-        run: terraform init -backend-config='key=$GITHUB_HEAD_REF.tfstate'
+        run: terraform init -backend-config='key=prod.tfstate'
       
       - name: Terraform Validate
         id: validate
@@ -43,8 +52,29 @@ jobs:
       - name: Terraform Plan
         id: plan
         if: github.event_name == 'pull_request'
-        run: terraform plan -no-color -input=false -var 'environment=$GITHUB_HEAD_REF'
+        run: terraform plan -no-color -input=false -var 'environment=prod'
         continue-on-error: true
+      
+      - name: Terraform Init
+        id: initpr
+        if: github.event_name == 'pull_request'
+        run: terraform init -backend-config='key=${{ github.head_ref }}.tfstate' -reconfigure
+      
+      - name: Terraform Validate
+        id: validatepr
+        if: github.event_name == 'pull_request'
+        run: terraform validate -no-color
+
+      - name: Terraform Review Apply
+        id: apply
+        if: github.event_name == 'pull_request'
+        run: terraform apply -auto-approve -no-color -input=false -var 'environment=${{ github.head_ref }}'
+        continue-on-error: true
+
+      - name: Terraform Output
+        id: tfout
+        if: github.event_name == 'pull_request'
+        run:  terraform output -raw preview | sed 's/.$//'
 
       - name: Update Pull Request
         uses: actions/github-script@v6
@@ -57,14 +87,14 @@ jobs:
             const output = `#### Terraform Format and Style 🖌\`${{ steps.fmt.outcome }}\`
             #### Terraform Initialization ⚙️\`${{ steps.init.outcome }}\`
             #### Terraform Validation 🤖\`${{ steps.validate.outcome }}\`
-            #### Terraform Plan 📖\`${{ steps.plan.outcome }}\`
-            #### Preview URL 🌎 terraform output -raw preview
-            <details><summary>Show Plan</summary>
-            \`\`\`terraform\n
+            #### Terraform Prod Plan 📖\`${{ steps.plan.outcome }}\`
+            #### Preview URL 🌎 [https://${{ steps.tfout.outputs.stdout }}](https://${{ steps.tfout.outputs.stdout }})
+            <details><summary>Show Prod Plan</summary>\n
+            \`\`\`\n
             ${process.env.PLAN}
             \`\`\`
             </details>
-            *Pushed by: @${{ github.actor }}, Action: \`${{ github.event_name }}\`*`;
+            Pushed by: @${{ github.actor }}, Action: ${{ github.event_name }}`;
             github.rest.issues.createComment({
               issue_number: context.issue.number,
               owner: context.repo.owner,
@@ -75,6 +105,21 @@ jobs:
         if: steps.plan.outcome == 'failure'
         run: exit 1
 
-      # - name: Terraform Apply
+      - name: Terraform Apply
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        run: terraform apply -auto-approve -input=false -var 'environment=prod'
+      
+      - name: Terraform Plan Status
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        run: echo ${{ github.head_ref }}
+
+      # - name: Terraform Init
+      #   id: initdestroy
       #   if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-      #   run: terraform apply -auto-approve -input=false
+      #   run: terraform init -backend-config='key=${{ github.head_ref }}.tfstate' -reconfigure
+
+      # - name: Terraform Review Destroy
+      #   id: apply
+      #   if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+      #   run: terraform apply -destroy -auto-approve -no-color -input=false -var 'environment=${{ github.head_ref }}'
+      #   continue-on-error: true
