@@ -54,9 +54,9 @@ jobs:
         run: terraform plan -no-color -input=false -var 'environment=${{ github.head_ref }}'
         continue-on-error: true
 
-      - name: Show ENV
-        id: env
-        run: env
+      - name: Terraform Output
+        id: tfout 
+        run: terraform output -raw preview
 
       - name: Update Pull Request
         uses: actions/github-script@v6
