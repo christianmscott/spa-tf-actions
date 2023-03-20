@@ -1,5 +1,5 @@
 variable "service" {
-  default = "spa"
+  default = "servicename"
 }
 variable "environment" {}
 variable "region" {
@@ -9,5 +9,5 @@ variable "region" {
   }
 }
 variable "domain" {
-  default = "processfoundry.io"
+  default = "domain.com"
 }
