@@ -57,10 +57,12 @@ jobs:
       
       - name: Terraform Init
         id: initpr
+        if: github.event_name == 'pull_request'
         run: terraform init -backend-config='key=${{ github.head_ref }}.tfstate' -reconfigure
       
       - name: Terraform Validate
         id: validatepr
+        if: github.event_name == 'pull_request'
         run: terraform validate -no-color
 
       - name: Terraform Review Apply
@@ -71,6 +73,7 @@ jobs:
 
       - name: Terraform Output
         id: tfout
+        if: github.event_name == 'pull_request'
         run:  terraform output -raw preview | sed 's/.$//'
 
       - name: Update Pull Request
@@ -102,6 +105,21 @@ jobs:
         if: steps.plan.outcome == 'failure'
         run: exit 1
 
-      # - name: Terraform Apply
+      - name: Terraform Apply
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        run: terraform apply -auto-approve -input=false -var 'environment=prod'
+      
+      - name: Terraform Plan Status
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        run: echo ${{ github.head_ref }}
+
+      # - name: Terraform Init
+      #   id: initdestroy
       #   if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-      #   run: terraform apply -auto-approve -input=false
+      #   run: terraform init -backend-config='key=${{ github.head_ref }}.tfstate' -reconfigure
+
+      # - name: Terraform Review Destroy
+      #   id: apply
+      #   if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+      #   run: terraform apply -destroy -auto-approve -no-color -input=false -var 'environment=${{ github.head_ref }}'
+      #   continue-on-error: true
