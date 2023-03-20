@@ -71,7 +71,7 @@ jobs:
 
       - name: Terraform Output
         id: tfout
-        run:  terraform output -raw preview
+        run:  terraform output -raw preview | sed 's/.$//'
 
       - name: Update Pull Request
         uses: actions/github-script@v6
