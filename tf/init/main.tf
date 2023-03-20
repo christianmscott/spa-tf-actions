@@ -1,15 +1,15 @@
 terraform {
-    required_providers {
-        azurerm = {
-            source  = "hashicorp/azurerm"
-        }
+  required_providers {
+    azurerm = {
+      source = "hashicorp/azurerm"
     }
-    backend "azurerm" {
-        resource_group_name  = "rg-spa-init-eus"
-        storage_account_name = "saspastate"
-        container_name       = "tfstate"
-        key                  = "init.terraform.tfstate"
-    }
+  }
+  backend "azurerm" {
+    resource_group_name  = "rg-spa-init-eus"
+    storage_account_name = "saspastate"
+    container_name       = "tfstate"
+    key                  = "init.terraform.tfstate"
+  }
 }
 
 # Configure the Microsoft Azure Provider
@@ -20,46 +20,46 @@ provider "azurerm" {
 
 # Creating initial resource group to house shared services. 
 resource "azurerm_resource_group" "init" {
-    name = "rg-${var.service}-${var.environment}-${var.region.suffix}"
-    location = "${var.region.name}"
-    tags = {
-        app = "${var.service}"
-        environment = "${var.environment}"
-        created-by = "terraform"
-        purpose = "Service requirements."
-    }
+  name     = "rg-${var.service}-${var.environment}-${var.region.suffix}"
+  location = var.region.name
+  tags = {
+    app         = "${var.service}"
+    environment = "${var.environment}"
+    created-by  = "terraform"
+    purpose     = "Service requirements."
+  }
 }
 
 # Creating shared storage account for terraform state files used in the environments. 
 resource "azurerm_storage_account" "init" {
-    name                     = "sa${var.service}state"
-    resource_group_name      = azurerm_resource_group.init.name
-    location                 = azurerm_resource_group.init.location
-    account_tier             = "Standard"
-    account_replication_type = "LRS"
-    tags = {
-        app = "${var.service}"
-        environment = "${var.environment}"
-        created-by = "terraform"
-        purpose = "Environment terraform state."
-    }
+  name                     = "sa${var.service}state"
+  resource_group_name      = azurerm_resource_group.init.name
+  location                 = azurerm_resource_group.init.location
+  account_tier             = "Standard"
+  account_replication_type = "LRS"
+  tags = {
+    app         = "${var.service}"
+    environment = "${var.environment}"
+    created-by  = "terraform"
+    purpose     = "Environment terraform state."
+  }
 }
 
 # Creating blob container with private access for TF state file. 
 resource "azurerm_storage_container" "init" {
-    name                  = "tfstate"
-    storage_account_name  = azurerm_storage_account.init.name
-    container_access_type = "private"
+  name                  = "tfstate"
+  storage_account_name  = azurerm_storage_account.init.name
+  container_access_type = "private"
 }
 
 # Creating zone here which will be shared between all environments
 resource "azurerm_dns_zone" "init" {
-    name                = "${var.service}.${var.domain}"
-    resource_group_name = azurerm_resource_group.init.name
-    tags = {
-        app = "${var.service}"
-        environment = "${var.environment}"
-        created-by = "terraform"
-        purpose = "${var.service} dns records."
-    }
+  name                = "${var.service}.${var.domain}"
+  resource_group_name = azurerm_resource_group.init.name
+  tags = {
+    app         = "${var.service}"
+    environment = "${var.environment}"
+    created-by  = "terraform"
+    purpose     = "${var.service} dns records."
+  }
 }

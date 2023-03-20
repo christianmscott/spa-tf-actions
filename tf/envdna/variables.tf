@@ -1,13 +1,13 @@
 variable "service" {
-    default = "spa"
+  default = "spa"
 }
 variable "environment" {}
 variable "region" {
-    default = {
-        name = "East US"
-        suffix = "eus"
-    }
+  default = {
+    name   = "East US"
+    suffix = "eus"
+  }
 }
 variable "domain" {
-    default = "processfoundry.io"
+  default = "processfoundry.io"
 }

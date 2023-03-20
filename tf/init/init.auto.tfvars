@@ -1,7 +1,7 @@
-service = "spa"
+service     = "spa"
 environment = "init"
-domain = "processfoundry.io"
+domain      = "processfoundry.io"
 region = {
-    name = "East US"
-    suffix = "eus"
+  name   = "East US"
+  suffix = "eus"
 }
