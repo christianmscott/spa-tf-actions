@@ -42,7 +42,7 @@ jobs:
 
       - name: Terraform Init
         id: init
-        run: terraform init -backend-config='key=${{ github.head_ref }}.tfstate'
+        run: terraform init -backend-config='key=prod.tfstate'
       
       - name: Terraform Validate
         id: validate
@@ -51,11 +51,25 @@ jobs:
       - name: Terraform Plan
         id: plan
         if: github.event_name == 'pull_request'
-        run: terraform plan -no-color -input=false -var 'environment=${{ github.head_ref }}'
+        run: terraform plan -no-color -input=false -var 'environment=prod'
+        continue-on-error: true
+      
+      - name: Terraform Init
+        id: initpr
+        run: terraform init -backend-config='key=${{ github.head_ref }}.tfstate'
+      
+      - name: Terraform Validate
+        id: validatepr
+        run: terraform validate -no-color
+
+      - name: Terraform Review Apply
+        id: apply
+        if: github.event_name == 'pull_request'
+        run: terraform apply -auto-approve -no-color -input=false -var 'environment=${{ github.head_ref }}'
         continue-on-error: true
 
       - name: Terraform Output
-        id: tfout 
+        id: tfout
         run: terraform output -raw preview
 
       - name: Update Pull Request
@@ -69,9 +83,9 @@ jobs:
             const output = `#### Terraform Format and Style 🖌\`${{ steps.fmt.outcome }}\`
             #### Terraform Initialization ⚙️\`${{ steps.init.outcome }}\`
             #### Terraform Validation 🤖\`${{ steps.validate.outcome }}\`
-            #### Terraform Plan 📖\`${{ steps.plan.outcome }}\`
-            #### Preview URL 🌎
-            <details><summary>Show Plan</summary>
+            #### Terraform Prod Plan 📖\`${{ steps.plan.outcome }}\`
+            #### Preview ENV 🌎\`${{ steps.tfout.outputs }}\`
+            <details><summary>Show Prod Plan</summary>
             \`\`\`
             ${process.env.PLAN}
             \`\`\`
