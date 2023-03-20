@@ -12,8 +12,8 @@ terraform {
     storage_account_name = "saspastate"
     container_name       = "tfstate"
     use_oidc             = true
-    subscription_id = "2dc44418-0342-4011-a246-1212080842d0"
-    tenant_id = "f9611db6-ae6f-4280-8b61-ae4f781129a1"
+    subscription_id      = "2dc44418-0342-4011-a246-1212080842d0"
+    tenant_id            = "f9611db6-ae6f-4280-8b61-ae4f781129a1"
   }
 }
 
