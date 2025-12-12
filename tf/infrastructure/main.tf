@@ -14,7 +14,7 @@ resource "azurerm_storage_account" "main" {
   account_tier             = "Standard"
   account_replication_type = "LRS"
   network_rules {
-    default_action = "Allow"
+    default_action = "Block"
   }
   static_website {
     index_document = "index.html"
